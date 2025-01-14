@@ -15,7 +15,7 @@ class Azure extends AbstractProvider
 {
     const ENDPOINT_VERSION_1_0 = '1.0';
     const ENDPOINT_VERSION_2_0 = '2.0';
-  
+
     use BearerAuthorizationTrait;
 
     public $urlLogin = 'https://login.microsoftonline.com/';
@@ -33,7 +33,7 @@ class Azure extends AbstractProvider
 
     public $urlAPI = 'https://graph.windows.net/';
 
-    public $resource = '';
+    public $resource = 'https://graph.microsoft.com/';
 
     public $API_VERSION = '1.6';
 
@@ -200,23 +200,10 @@ class Azure extends AbstractProvider
         }
 
         $url = null;
-        if (false !== filter_var($ref, FILTER_VALIDATE_URL)) {
+        if (filter_var($ref, FILTER_VALIDATE_URL) !== FALSE) {
             $url = $ref;
         } else {
-            if (false !== strpos($this->urlAPI, 'graph.windows.net')) {
-                $tenant = 'common';
-                if (property_exists($this, 'tenant')) {
-                    $tenant = $this->tenant;
-                }
-                $ref = "$tenant/$ref";
-
-                $url = $this->urlAPI . $ref;
-
-                $url .= (false === strrpos($url, '?')) ? '?' : '&';
-                $url .= 'api-version=' . $this->API_VERSION;
-            } else {
-                $url = $this->urlAPI . $ref;
-            }
+            $url = $this->resource . $ref;
         }
 
         if (isset($options['body']) && ('array' == gettype($options['body']) || 'object' == gettype($options['body']))) {
@@ -248,7 +235,6 @@ class Azure extends AbstractProvider
     {
         $openIdConfiguration = $this->getOpenIdConfiguration($this->tenant, $this->defaultEndPointVersion);
         $logoutUri = $openIdConfiguration['end_session_endpoint'];
-
         if (!empty($post_logout_redirect_uri)) {
             $logoutUri .= '?post_logout_redirect_uri=' . rawurlencode($post_logout_redirect_uri);
         }
